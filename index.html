@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>NFT mini-game</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+    <script src="https://unpkg.com/moralis-v1/dist/moralis.js"></script>
+    <script>
+      async function connectWallet() {
+        console.log("Initializing connect!");
+        await login();
+      }
+
+      const serverUrl = "https://laayjkh1mfen.usemoralis.com:2053/server";
+      const appId = "NFT Talents";
+      Moralis.start({ serverUrl, appId });
+
+      /* Authentication code */
+      async function login() {
+        var user = Moralis.User.current();
+        //console.log(user);
+
+        user = await Moralis.authenticate({
+          signingMessage: "Congratulations, you finished the level!",
+        })
+          .then(function (user) {
+            console.log("logged in user:", user);
+            console.log(user.get("ethAddress"));
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }
+
+      var GameScene = new Phaser.Class({
+        Extends: Phaser.Scene,
+
+        initialize: function GameScene() {
+          Phaser.Scene.call(this, { key: "gameScene", active: true });
+
+          this.player = null;
+          this.cursors = null;
+          this.score = 0;
+          this.scoreText = null;
+        },
+
+        preload: function () {
+          this.load.image("sky", "https://i.imgur.com/lcthAXC.png");
+          this.load.image("ground", "https://i.imgur.com/V0orWTa.png");
+          this.load.image(
+            "star",
+            "https://21169759.fs1.hubspotusercontent-na1.net/hub/21169759/hubfs/small.png?width=80&name=small.png"
+          );
+          this.load.image("bomb", "src/games/firstgame/assets/bomb.png");
+          this.load.spritesheet("dude", "https://i.imgur.com/3PsqT4X.png", {
+            frameWidth: 32,
+            frameHeight: 48,
+          });
+          this.load.spritesheet(
+            "fullscreen",
+            "https://i.imgur.com/KL2jvND.png",
+            {
+              frameWidth: 65,
+              frameHeight: 65,
+            }
+          );
+        },
+
+        create: function () {
+          this.add.image(400, 300, "sky");
+
+          var platforms = this.physics.add.staticGroup();
+
+          platforms.create(400, 568, "ground").setScale(2).refreshBody();
+
+          platforms.create(600, 400, "ground");
+          platforms.create(50, 250, "ground");
+          platforms.create(750, 220, "ground");
+
+          var player = this.physics.add.sprite(100, 450, "dude");
+
+          player.setBounce(0.2);
+          player.setCollideWorldBounds(true);
+
+          this.anims.create({
+            key: "left",
+            frames: this.anims.generateFrameNumbers("dude", {
+              start: 0,
+              end: 3,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+
+          this.anims.create({
+            key: "turn",
+            frames: [{ key: "dude", frame: 4 }],
+            frameRate: 20,
+          });
+
+          this.anims.create({
+            key: "right",
+            frames: this.anims.generateFrameNumbers("dude", {
+              start: 5,
+              end: 8,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+
+          this.cursors = this.input.keyboard.createCursorKeys();
+
+          var stars = this.physics.add.group({
+            key: "star",
+            repeat: 11,
+            setXY: { x: 12, y: 0, stepX: 70 },
+          });
+
+          stars.children.iterate(function (child) {
+            child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+          });
+
+          this.scoreText = this.add.text(16, 16, "Talents: 0", {
+            fontSize: "32px",
+            fill: "#000",
+          });
+
+          this.physics.add.collider(player, platforms);
+          this.physics.add.collider(stars, platforms);
+
+          this.physics.add.overlap(player, stars, this.collectStar, null, this);
+
+          this.player = player;
+
+          var button = this.add
+            .image(800 - 16, 16, "fullscreen", 0)
+            .setOrigin(1, 0)
+            .setInteractive();
+
+          button.on(
+            "pointerup",
+            function () {
+              if (this.scale.isFullscreen) {
+                button.setFrame(0);
+
+                this.scale.stopFullscreen();
+              } else {
+                button.setFrame(1);
+
+                this.scale.startFullscreen();
+              }
+            },
+            this
+          );
+
+          this.scoreText.setText("0");
+
+          var FKey = this.input.keyboard.addKey("F");
+
+          FKey.on(
+            "down",
+            function () {
+              if (this.scale.isFullscreen) {
+                button.setFrame(0);
+                this.scale.stopFullscreen();
+              } else {
+                button.setFrame(1);
+                this.scale.startFullscreen();
+              }
+            },
+            this
+          );
+        },
+
+        update: function () {
+          var cursors = this.cursors;
+          var player = this.player;
+
+          if (cursors.left.isDown) {
+            player.setVelocityX(-160);
+
+            player.anims.play("left", true);
+          } else if (cursors.right.isDown) {
+            player.setVelocityX(160);
+
+            player.anims.play("right", true);
+          } else {
+            player.setVelocityX(0);
+
+            player.anims.play("turn");
+          }
+
+          if (cursors.up.isDown && player.body.touching.down) {
+            player.setVelocityY(-330);
+          }
+        },
+
+        collectStar: function (player, star) {
+          star.disableBody(true, true);
+
+          this.score += 10;
+          this.scoreText.setText("Talents: " + this.score);
+          if (this.score >= 120) {
+            connectWallet();
+          }
+        },
+      });
+
+      var config = {
+        type: Phaser.AUTO,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          parent: "phaser-example",
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+          width: 800,
+          height: 600,
+        },
+        physics: {
+          default: "arcade",
+          arcade: {
+            gravity: { y: 300 },
+            debug: false,
+          },
+        },
+        scene: GameScene,
+      };
+
+      var game = new Phaser.Game(config);
+    </script>
+  </head>
+
+  <body>
+    <div id="content"></div>
+  </body>
+</html>
