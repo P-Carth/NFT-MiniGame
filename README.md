@@ -1,9 +1,9 @@
 # <p align='center'> NFT-MiniGame </p>
 # <p align='center'> ![Dynamic NFT Game](https://media.giphy.com/media/Kf7cW0rDnKGGJZ9GzQ/giphy.gif) </p>
 
-> For in-depth instructions on how to follow along and build your own NFT Minigame, checkout my medium article: https://medium.com/@prestonkirschner1/how-to-mint-an-nft-minigame-29324fb7c1f9
+> For in-depth instructions on how to follow along and build your own NFT Minigame, checkout my medium article here: https://medium.com/@prestonkirschner1/how-to-mint-an-nft-minigame-29324fb7c1f9
 
-> Link to NFT: https://testnets.opensea.io/assets/goerli/0x5df35b2d4bc6c41e98386b87c972a5636dedf037/1
+> To view/play with the NFT, click here: https://testnets.opensea.io/assets/goerli/0x5df35b2d4bc6c41e98386b87c972a5636dedf037/1
 
 ## Summary
 
